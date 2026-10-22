@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+artifacts/
+.DS_Store
+
+# Local task brief; preserve it without publishing it.
+/TGI_WORDPRESS_AGENT_TASK.md

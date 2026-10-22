@@ -1,0 +1,3 @@
+# Preserve byte-for-byte upstream notice/config formatting.
+docker/*LICENSE -whitespace
+docker/wp-config-docker.php -whitespace

@@ -1,0 +1,55 @@
+name: Validate images
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: matrix
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          cfg=json.load(open('versions/versions.yaml'))
+          runners={'linux/amd64':'ubuntu-24.04','linux/arm64':'ubuntu-24.04-arm'}
+          print('matrix='+json.dumps({'include':[{'php':b,'runner':runners[p],'arch':p.split('/')[1]} for b,e in cfg['php'].items() if e['enabled'] for p in e['platforms']]}))
+          PY
+  test:
+    needs: matrix
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Validate scripts and security constraints
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 -m py_compile scripts/builder.py tests/integration.py
+          for script in scripts/*.sh docker/docker-entrypoint.sh; do bash -n "$script"; done
+      - name: Build locked source and verify actual versions
+        run: ./scripts/build.sh '${{ matrix.php }}'
+      - name: HTTP, database and volume compatibility
+        run: ./scripts/test.sh '${{ matrix.php }}'
+      - name: Install scanner
+        uses: aquasecurity/setup-trivy@v0.3.1
+        with:
+          cache: true
+          version: v0.76.1
+      - name: Scan actual image
+        run: ./scripts/scan.sh '${{ matrix.php }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-php${{ matrix.php }}-${{ matrix.arch }}
+          path: artifacts/*.json

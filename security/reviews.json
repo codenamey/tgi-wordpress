@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "reviews": [
+    {
+      "id": "CVE-2026-6653",
+      "package": "libxml2",
+      "versions": ["2.12.7+dfsg+really2.9.14-2.1+deb13u3"],
+      "os_family": "debian",
+      "os_major": "13",
+      "status": "vendor_minor_deferred",
+      "reason": "Affected XML parsing library; NOT claimed fixed or not affected. Debian explicitly classifies the trixie issue as no-dsa / Minor issue and has no fixed stable package. Temporarily defer this exact vendor-minor denial-of-service finding while shipping the independently verified critical PHP RCE fixes. No site-specific exploitability assumption is made. A newly available fix, changed package version, changed distribution or expiry blocks release again.",
+      "references": ["https://security-tracker.debian.org/tracker/CVE-2026-6653", "https://gitlab.gnome.org/GNOME/libxml2/-/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df"],
+      "reviewed_at": "2026-10-22",
+      "expires_at": "2026-10-29",
+      "reviewed_by": "Codex automated release security review"
+    },
+    {
+      "id": "CVE-2026-93221",
+      "package": "linux-libc-dev",
+      "versions": ["6.12.113-1"],
+      "os_family": "debian",
+      "os_major": "13",
+      "status": "not_affected",
+      "reason": "The advisory concerns executable Linux kernel fs/nfsd implementation. linux-libc-dev supplies userspace development headers, not a running kernel/NFS server. This review applies only to this header package in the WordPress image, never to a host kernel, linux-image package, NFS server or any other package. Host kernel patch status remains outside this image review.",
+      "references": ["https://kernel-team.pages.debian.net/kernel-sec/CVE-2026-93221.html", "https://packages.debian.org/trixie/linux-libc-dev"],
+      "reviewed_at": "2026-10-22",
+      "expires_at": "2026-10-29",
+      "reviewed_by": "Codex automated release security review"
+    }
+  ]
+}

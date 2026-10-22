@@ -1,0 +1,40 @@
+{
+  "build_revision": 2,
+  "php": {
+    "8.4": {
+      "enabled": true,
+      "base_image_family": "php:8.4-apache",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "build_from_source": true,
+      "minimum_version": "8.4.27"
+    },
+    "8.5": {
+      "enabled": true,
+      "base_image_family": "php:8.5-apache",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "build_from_source": true,
+      "minimum_version": "8.5.12"
+    },
+    "9.2": {
+      "enabled": false,
+      "base_image_family": "php:9.2-apache",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ]
+    }
+  },
+  "extensions": {
+    "redis": {
+      "version": "6.3.0",
+      "commit": "df4fab2de7fc327c54c94a13af2b9542e4fbd720",
+      "sha256": "79ecabd899e50a6efa56d9fc28a987a25d78deecc32fdd0fa9840b1b3d83740e"
+    }
+  }
+}
