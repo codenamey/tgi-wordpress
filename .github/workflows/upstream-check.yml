@@ -22,7 +22,7 @@ jobs:
           mkdir -p versions
           cp artifacts/upstream-observation.json versions/upstream-observation.json
       - name: Open or update one review PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: automation/upstream-observation
           title: 'Review upstream PHP, WordPress and Debian changes'
