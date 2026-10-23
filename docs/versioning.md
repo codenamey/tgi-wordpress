@@ -26,6 +26,10 @@ on the `ghcr-release` environment before enabling it. It first runs native CI
 for every configured branch/platform, then pushes an attested multi-platform
 candidate. It validates that exact candidate digest on every platform (including
 WordPress integration and scanning) before creating exact and branch aliases.
+Each platform is pulled and checked using its own child manifest digest from
+the candidate index. This avoids overwriting an index digest in Docker's classic
+image store when switching architectures. Promotion retains the complete index,
+including SBOM and provenance; release evidence records the checked child references.
 Failed candidates remain unpublished as release aliases but can exist in GHCR
 under candidate tags; remove them through the registry retention policy.
 No stable tag is created. The repository does not create a GitHub remote or

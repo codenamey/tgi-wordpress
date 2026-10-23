@@ -183,7 +183,16 @@ def build(branch):
     verify(branch)
 
 
-def verify(branch, ref=None):
+def platform_digest(manifest, platform):
+    matches = [m for m in manifest.get('manifests', [])
+               if m.get('platform', {}).get('os', '') + '/' + m.get('platform', {}).get('architecture', '') == platform
+               and m.get('annotations', {}).get('vnd.docker.reference.type') != 'attestation-manifest']
+    if len(matches) != 1 or not re.fullmatch(r'sha256:[0-9a-f]{64}', matches[0].get('digest', '')):
+        raise ValueError('Expected one valid runtime manifest for ' + platform)
+    return matches[0]['digest']
+
+
+def verify(branch, ref=None, expected_platform=None):
     data = locked(branch)
     ref = ref or image(branch)
     actual = run('docker', 'run', '--rm', ref, 'php', '-r', 'echo PHP_VERSION;', capture=True).strip()
@@ -205,6 +214,8 @@ def verify(branch, ref=None):
     inspect = json.loads(run('docker', 'image', 'inspect', ref, capture=True))[0]
     if inspect['Os'] + '/' + inspect['Architecture'] not in data['platforms']:
         raise ValueError('Final image architecture is not configured')
+    if expected_platform and inspect['Os'] + '/' + inspect['Architecture'] != expected_platform:
+        raise ValueError('Final image architecture does not match ' + expected_platform)
     save(ART / f'verified-{branch}.json', {'image': ref, 'image_id': inspect['Id'], 'php': actual,
         'wordpress': wp, 'redis': redis_version, 'modules': modules, 'base': data['base'], 'php_source': data,
         'architecture': inspect['Architecture'], 'repo_digests': inspect.get('RepoDigests', [])})
@@ -258,17 +269,20 @@ def publish(branch):
     ref = destination + '@' + digest
     manifest = json.loads(run('docker', 'buildx', 'imagetools', 'inspect', '--raw', ref, capture=True))
     validate_platforms(manifest, data['platforms'])
+    runtime_refs = {platform: destination + '@' + platform_digest(manifest, platform)
+                    for platform in data['platforms']}
     for platform in data['platforms']:
         os.environ['DOCKER_DEFAULT_PLATFORM'] = platform
-        run('docker', 'pull', '--platform', platform, ref)
-        verify(branch, ref)
-        run(sys.executable, ROOT / 'tests/integration.py', branch, ref)
-        scan(branch, ref, platform)
+        runtime_ref = runtime_refs[platform]
+        run('docker', 'pull', '--platform', platform, runtime_ref)
+        verify(branch, runtime_ref, expected_platform=platform)
+        run(sys.executable, ROOT / 'tests/integration.py', branch, runtime_ref)
+        scan(branch, runtime_ref, platform)
     # Candidate references are never production aliases. Promote only after all gates.
     run('docker', 'buildx', 'imagetools', 'create', '-t', exact, '-t', destination + ':' + branch, ref)
     save(ART / f'release-{branch}.json', {'image': exact, 'digest': digest, 'reference': ref,
         'php': data['version'], 'wordpress': WP, 'source_revision': revision, 'platforms': data['platforms'],
-        'inputs': data, 'extensions': config()['extensions'],
+        'inputs': data, 'extensions': config()['extensions'], 'runtime_references': runtime_refs,
         'security_reviews': read(ROOT / 'security/reviews.json'), 'provenance': True, 'sbom': True})
 
 

@@ -9,6 +9,23 @@ b = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(b)
 
 class ConfigTests(unittest.TestCase):
+    def test_platform_digest_selects_distinct_runtime_manifests(self):
+        manifest = {'manifests': [
+            {'platform': {'os': 'linux', 'architecture': arch}, 'digest': 'sha256:' + char * 64}
+            for arch, char in [('amd64', 'a'), ('arm64', 'b')]]}
+        manifest['manifests'].extend([
+            {'platform': {'os': 'unknown', 'architecture': 'unknown'}, 'digest': 'sha256:' + 'c' * 64},
+            {'platform': {'os': 'linux', 'architecture': 'arm64'}, 'digest': 'sha256:' + 'd' * 64,
+             'annotations': {'vnd.docker.reference.type': 'attestation-manifest'}}, {}])
+        self.assertEqual(b.platform_digest(manifest, 'linux/amd64'), 'sha256:' + 'a' * 64)
+        self.assertEqual(b.platform_digest(manifest, 'linux/arm64'), 'sha256:' + 'b' * 64)
+
+    def test_platform_digest_rejects_missing_ambiguous_or_invalid(self):
+        entry = {'platform': {'os': 'linux', 'architecture': 'arm64'}, 'digest': 'sha256:' + 'a' * 64}
+        for entries in [[], [entry, entry], [dict(entry, digest='invalid')]]:
+            with self.subTest(entries=entries), self.assertRaises(ValueError):
+                b.platform_digest({'manifests': entries}, 'linux/arm64')
+
     def test_disabled_future_branch(self):
         with self.assertRaisesRegex(ValueError, 'disabled'):
             b.selected('9.2')
