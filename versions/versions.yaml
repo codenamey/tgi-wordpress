@@ -1,5 +1,11 @@
 {
-  "build_revision": 2,
+  "build_revision": 3,
+  "brotli": {
+    "version": "1.1.1",
+    "commit": "db0631dfea829194206d269bc7b25d0908cdb97d",
+    "sha256": "38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a",
+    "package_version": "1.1.1-0+tgi1"
+  },
   "php": {
     "8.4": {
       "enabled": true,

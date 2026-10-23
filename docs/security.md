@@ -30,6 +30,29 @@ and private temporary Docker networks; HTTP binds only to localhost.
 
 ## Reviewed findings, 22 October 2026
 
+### Brotli fix, 23 October 2026
+
+CVE-2026-111497 was newly reported by the release scan against Debian's
+libbrotli1 `1.1.0-2+b7`; that package is affected and is never exempted.
+Debian has no fixed package at inspection. TGI r3 builds upstream Brotli 1.1.1
+commit `db0631dfea829194206d269bc7b25d0908cdb97d`, SHA256
+`38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a`,
+as `libbrotli1 1.1.1-0+tgi1`. It replaces the original libraries through dpkg
+after the image's apt operations. Upstream CTest must pass; a dynamically linked
+helper checks the installed decoder/encoder versions and compression roundtrip
+both at build time and in final-image verification on each architecture.
+The MIT license and source provenance are installed with the replacement.
+
+The exact replacement package has a scoped, expiring not-affected review because
+Debian's unfixed-package advisory can also flag custom fixed versions. This is
+upstream patch verification, not an acceptance of the vulnerable Debian package.
+Sources: https://security-tracker.debian.org/tracker/CVE-2026-111497 and
+https://github.com/google/brotli/releases/tag/v1.1.1 .
+Remove the custom build when Debian ships a verified fixed package. Later apt
+operations must not downgrade it; re-run final-image verification after changes.
+
+### Existing Debian reviews
+
 - CVE-2026-6653 in Debian 13 libxml2 `2.12.7+dfsg+really2.9.14-2.1+deb13u3`
   remains affected. Debian explicitly calls it a minor/no-dsa denial-of-service
   issue and has no fixed stable package. Its exact version is temporarily

@@ -197,6 +197,12 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -svfT docker-entrypoint.sh /usr/local/bin/docker-ensure-installed.sh
 
 ARG SOURCE_REVISION=unknown
+ARG BROTLI_VERSION
+ARG BROTLI_PACKAGE_VERSION
+COPY --from=brotli-build /out/libbrotli1.deb /tmp/libbrotli1.deb
+RUN dpkg -i /tmp/libbrotli1.deb && rm /tmp/libbrotli1.deb && ldconfig \
+    && test "$(dpkg-query -W -f='${Version}' libbrotli1)" = "$BROTLI_PACKAGE_VERSION" \
+    && tgi-verify-brotli "$BROTLI_VERSION"
 ARG BUILD_REVISION=1
 ARG PHP_VERSION
 LABEL org.opencontainers.image.source="https://github.com/codenamey/tgi-wordpress" \
@@ -205,6 +211,7 @@ LABEL org.opencontainers.image.source="https://github.com/codenamey/tgi-wordpres
       io.tgi.php.version="$PHP_VERSION" \
       io.tgi.wordpress.version="7.1.3" \
       io.tgi.redis.version="$REDIS_VERSION" \
+      io.tgi.brotli.version="$BROTLI_VERSION" \
       io.tgi.build.revision="$BUILD_REVISION" \
       io.tgi.upstream.revision="2d7faab7fb71508e6854cdbed948c195957f279e"
 

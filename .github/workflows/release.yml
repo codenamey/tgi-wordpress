@@ -30,20 +30,28 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      native: ${{ steps.matrix.outputs.native }}
     steps:
       - uses: actions/checkout@v4
       - id: matrix
-        run: echo "matrix=$(python3 scripts/builder.py matrix)" >> "$GITHUB_OUTPUT"
-  publish:
+        run: |
+          echo "matrix=$(python3 scripts/builder.py matrix)" >> "$GITHUB_OUTPUT"
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          cfg=json.load(open('versions/versions.yaml'))
+          runners={'linux/amd64':'ubuntu-24.04','linux/arm64':'ubuntu-24.04-arm'}
+          print('native='+json.dumps({'include':[{'php':b,'runner':runners[p],'platform':p,'arch':p.split('/')[1]} for b,e in cfg['php'].items() if e['enabled'] for p in e['platforms']]}))
+          PY
+  candidate:
     needs: [validate, matrix]
     environment: ghcr-release
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
       packages: write
     strategy:
-      max-parallel: 1
-      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.native) }}
     env:
       TGI_OWNER: ${{ inputs.registry_owner }}
       EXPECTED_VISIBILITY: ${{ inputs.repository_visibility }}
@@ -54,7 +62,6 @@ jobs:
         run: |
           test "$TGI_OWNER" = "${GITHUB_REPOSITORY_OWNER,,}"
           test "$(gh api "repos/$GITHUB_REPOSITORY" --jq .visibility)" = "$EXPECTED_VISIBILITY"
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -64,11 +71,51 @@ jobs:
       - uses: aquasecurity/setup-trivy@v0.3.1
         with:
           version: v0.76.1
-      - name: Build candidate, validate exact digest, promote passing images
+      - name: Build and validate native candidate digest
         env:
           TGI_REGISTRY_DESTINATION: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
           TGI_PUBLISH_APPROVAL: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
-        run: ./scripts/publish.sh '${{ matrix.php }}'
+          TGI_RELEASE_PLATFORM: ${{ matrix.platform }}
+        run: python3 scripts/builder.py publish-platform '${{ matrix.php }}'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate-php${{ matrix.php }}-${{ matrix.arch }}
+          path: |
+            artifacts/candidate-*-${{ matrix.arch }}.json
+            artifacts/verified-*-${{ matrix.arch }}.json
+            artifacts/integration-*-${{ matrix.arch }}.json
+            artifacts/security-*-${{ matrix.arch }}.json
+            artifacts/trivy-*-${{ matrix.arch }}.json
+            artifacts/sbom-*-${{ matrix.arch }}.json
+  promote:
+    needs: [candidate, matrix]
+    environment: ghcr-release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: candidate-php${{ matrix.php }}-*
+          path: artifacts
+          merge-multiple: true
+      - name: Recheck evidence and promote complete multi-platform release
+        env:
+          TGI_REGISTRY_DESTINATION: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
+          TGI_PUBLISH_APPROVAL: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
+        run: python3 scripts/builder.py promote '${{ matrix.php }}'
       - uses: actions/upload-artifact@v4
         if: always()
         with:

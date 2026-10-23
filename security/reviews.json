@@ -2,6 +2,19 @@
   "schema": 1,
   "reviews": [
     {
+      "id": "CVE-2026-111497",
+      "package": "libbrotli1",
+      "versions": ["1.1.1-0+tgi1"],
+      "os_family": "debian",
+      "os_major": "13",
+      "status": "not_affected",
+      "reason": "Only the TGI package compiled from upstream Brotli v1.1.1 commit db0631dfea829194206d269bc7b25d0908cdb97d, archive SHA256 38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a. Debian identifies upstream v1.1.1 and fix commit da9806362874b9bd4b552a3af360b5d6347beb12 as remediating CVE-2026-111497 but its tracker has no fixed Debian package, so Trivy may flag the replacement package. Build requires upstream CTest and runtime verification dynamically checks decoder/encoder version 1.1.1 and compression roundtrip on each architecture. This review never covers Debian libbrotli1 1.1.0-2+b7, an unpatched source build, or a different package version.",
+      "references": ["https://security-tracker.debian.org/tracker/CVE-2026-111497", "https://github.com/google/brotli/releases/tag/v1.1.1", "https://github.com/google/brotli/commit/da9806362874b9bd4b552a3af360b5d6347beb12"],
+      "reviewed_at": "2026-10-23",
+      "expires_at": "2026-10-29",
+      "reviewed_by": "Codex automated upstream patch verification"
+    },
+    {
       "id": "CVE-2026-6653",
       "package": "libxml2",
       "versions": ["2.12.7+dfsg+really2.9.14-2.1+deb13u3"],

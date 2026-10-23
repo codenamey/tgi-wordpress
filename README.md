@@ -52,5 +52,10 @@ CLI and Apache checks require DOM, libxml, SimpleXML, XML, XMLReader, XMLWriter,
 mysqli/mysqlnd and the Redis module. Integration tests include authenticated
 Redis set/get with expiry and PHP serialization.
 
-The historical r1 validation predates Redis; r2 must pass CI before release.
+The r3 build additionally replaces Debian's unfixed Brotli package with upstream
+**Brotli 1.1.1**, built from a pinned commit and SHA256 to fix CVE-2026-111497.
+The final image dynamically checks decoder/encoder versions and a compression
+roundtrip. Native AMD64/ARM64 candidates are tested and scanned by digest before
+their attested indexes are combined and release aliases are created.
+The historical r1 validation predates Redis and Brotli; it is not r3 evidence.
 See docs/security.md for time-limited, exact package security reviews.

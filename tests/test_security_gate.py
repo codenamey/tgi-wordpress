@@ -1,6 +1,7 @@
 import copy
 from datetime import date
 import importlib.util
+import json
 from pathlib import Path
 import unittest
 
@@ -9,6 +10,15 @@ gate=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gate)
 
 class SecurityGateTests(unittest.TestCase):
+    def test_brotli_review_covers_only_fixed_upstream_package(self):
+        policy = json.loads((Path(__file__).resolve().parents[1] / 'security/reviews.json').read_text())
+        for version, expected in [('1.1.0-2+b7', False), ('1.1.1-0+tgi1', True), ('1.1.1-0+tgi2', False)]:
+            report = {'Metadata': {'OS': {'Family': 'debian', 'Name': '13'}}, 'Results': [
+                {'Class': 'os-pkgs', 'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-111497',
+                 'PkgName': 'libbrotli1', 'InstalledVersion': version, 'Severity': 'CRITICAL'}]}]}
+            with self.subTest(version=version):
+                self.assertEqual(gate.evaluate(report, policy, date(2026, 10, 23))['passed'], expected)
+
     def setUp(self):
         self.policy={'schema':1,'reviews':[{'id':'CVE-2026-6653','package':'libxml2','versions':['1.0'],
             'os_family':'debian','os_major':'13','status':'vendor_minor_deferred','reason':'Vendor minor issue reviewed',

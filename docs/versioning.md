@@ -23,9 +23,13 @@ SBOM and provenance. Production references should use the recorded digest.
 The manual release workflow requires the confirmed registry owner, repository
 visibility and explicit publishing authorization. Configure required reviewers
 on the `ghcr-release` environment before enabling it. It first runs native CI
-for every configured branch/platform, then pushes an attested multi-platform
-candidate. It validates that exact candidate digest on every platform (including
-WordPress integration and scanning) before creating exact and branch aliases.
+for every configured branch/platform, then builds and pushes attested candidates
+on native AMD64 and ARM64 runners. Each candidate is verified, integration-tested
+and scanned by its runtime digest on the corresponding native runner. A final
+job checks source/configuration consistency and re-evaluates the raw scan reports
+under the current policy and date, then combines the candidate indexes. It checks
+that all runtime and attestation descriptors survive before creating exact and
+branch aliases. Failed native workers prevent all promotion jobs.
 Each platform is pulled and checked using its own child manifest digest from
 the candidate index. This avoids overwriting an index digest in Docker's classic
 image store when switching architectures. Promotion retains the complete index,
