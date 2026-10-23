@@ -14,7 +14,6 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
-		mariadb-client \
 # pull in AV1 & HEVC image encoding (and not just decoding)
 # https://github.com/docker-library/wordpress/issues/996
 		libheif-plugin-aomenc \

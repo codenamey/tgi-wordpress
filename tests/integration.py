@@ -72,7 +72,6 @@ echo 'installed';'''
     assert 'installed' in result
     assert docker('exec', '-u', 'www-data', web, 'wp', 'core', 'version', capture=True).strip() == b.WP
     assert docker('exec', '-u', 'www-data', web, 'wp', 'option', 'get', 'blogname', capture=True).strip() == 'TGI disposable test'
-    assert docker('exec', '-u', 'www-data', web, 'wp', 'db', 'query', 'SELECT 1;', '--skip-column-names', capture=True).strip() == '1'
     with urllib.request.urlopen(url, timeout=10) as res:
         assert res.status == 200 and b'TGI disposable test' in res.read()
     runtime = '<?php require __DIR__."/wp-load.php"; echo PHP_VERSION."|".TGI_TEST."|".$wpdb->get_var("SELECT 1")."|".phpversion("redis")."|".(ini_get("session.upload_progress.enabled") ? "enabled" : "disabled");'
@@ -93,7 +92,7 @@ echo 'installed';'''
     assert docker('run', '--rm', image, 'sh', '-c', 'printf custom-command', capture=True) == 'custom-command'
     b.save(b.ART / f'integration-{branch}.json', {'image': image, 'passed': True,
         'image_id': json.loads(docker('image', 'inspect', image, capture=True))[0]['Id'],
-        'checks': ['apache-http', 'apache-php-version', 'apache-redis-loaded', 'session-upload-progress-disabled', 'wp-cli-core', 'wp-cli-option', 'wp-cli-db-query', 'redis-auth-set-get-ttl', 'db-install', 'db-env', 'config-extra', 'persistent-content', 'persistent-config', 'core-not-overwritten', 'custom-command']})
+        'checks': ['apache-http', 'apache-php-version', 'apache-redis-loaded', 'session-upload-progress-disabled', 'wp-cli-core', 'wp-cli-option', 'redis-auth-set-get-ttl', 'db-install', 'db-env', 'config-extra', 'persistent-content', 'persistent-config', 'core-not-overwritten', 'custom-command']})
     print('Integration checks passed: ' + branch)
 except Exception:
     for container in containers:

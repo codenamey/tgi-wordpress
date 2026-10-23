@@ -47,8 +47,11 @@ WordPress core, WP-CLI, Redis, Brotli or Debian-only rebuilds.
 
 The r4 build includes WP-CLI 2.12.0 from its official release artifact, verified
 against SHA256 `ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c`.
-MariaDB client tools support WP-CLI database operations. Integration tests read
-core version, site options and a database query using WP-CLI as www-data.
+Integration tests read core version and database-backed site options using
+WP-CLI as www-data. Commands requiring an external mysql/mysqldump executable
+(such as `wp db export`) need a separately provisioned database client. The
+optional Debian MariaDB client was excluded after it added blocking scanner
+findings; no scanner exceptions were added for it.
 
 ```bash
 docker exec -u www-data -w /var/www/html CONTAINER wp --info
