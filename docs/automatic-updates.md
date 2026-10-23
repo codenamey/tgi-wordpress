@@ -67,6 +67,11 @@ or modify existing WordPress volumes.
 
 ## Installation and operation
 
+For a replacement machine after host failure, follow the complete Finnish
+[installation and recovery procedure](updater-recovery-fi.md). It covers a fresh
+Debian host, required packages, staging the installer inputs, replacing the
+repository deploy key, read-only checks, timer activation and release recovery.
+
 The installer creates the unprivileged `tgi-wp-updater` system user, installs the
 watcher under `/opt/tgi-wordpress-updater/`, and stores state in
 `/var/lib/tgi-wordpress-updater/` (0700). The user has no Docker group membership.

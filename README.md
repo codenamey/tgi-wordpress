@@ -9,6 +9,7 @@ The r4 build includes pinned WP-CLI, persistent session-upload
 hardening and per-branch `8.4-latest` / `8.5-latest` aliases. See
 [automatic patch releases](docs/automatic-updates.md) for the non-AI watcher,
 release gates and operating commands.
+If the watcher host fails, use the [fresh-machine recovery instructions](docs/updater-recovery-fi.md).
 
 Build patched PHP from official signed sources, then package WordPress with the
 unmodified official Apache entrypoint and configuration template. No dependency
