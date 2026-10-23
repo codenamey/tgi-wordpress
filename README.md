@@ -1,5 +1,9 @@
 # TGI WordPress
 
+Public r3 images are available at `ghcr.io/codenamey/tgi-wordpress:8.4` and
+`:8.5` for AMD64 and ARM64. See the [verified release record](docs/release-2026-10-23-r3.md)
+for immutable tags/digests, test results and scoped security reviews.
+
 Build patched PHP from official signed sources, then package WordPress with the
 unmodified official Apache entrypoint and configuration template. No dependency
 on the publication timing of official WordPress or PHP binary images.
