@@ -48,7 +48,7 @@ jobs:
           version: v0.76.1
       - name: Scan actual image
         run: ./scripts/scan.sh '${{ matrix.php }}'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: evidence-php${{ matrix.php }}-${{ matrix.arch }}
