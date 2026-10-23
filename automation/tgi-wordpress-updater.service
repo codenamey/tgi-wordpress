@@ -1,0 +1,30 @@
+[Unit]
+Description=TGI WordPress PHP patch update watcher
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=tgi-wp-updater
+Group=tgi-wp-updater
+StateDirectory=tgi-wordpress-updater
+StateDirectoryMode=0700
+Environment=HOME=/var/lib/tgi-wordpress-updater
+Environment=GIT_TERMINAL_PROMPT=0
+ExecStart=/usr/bin/python3 /opt/tgi-wordpress-updater/watch_updates.py
+TimeoutStartSec=5min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+CPUQuota=50%
+MemoryMax=512M
+

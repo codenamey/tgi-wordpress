@@ -1,0 +1,12 @@
+[Unit]
+Description=Check for TGI WordPress PHP patches every 15 minutes
+
+[Timer]
+OnBootSec=2min
+OnCalendar=*:0/15
+RandomizedDelaySec=30
+Persistent=true
+Unit=tgi-wordpress-updater.service
+
+[Install]
+WantedBy=timers.target

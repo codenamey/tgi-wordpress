@@ -14,6 +14,7 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 # Ghostscript is required for rendering PDF previews
 		ghostscript \
+		mariadb-client \
 # pull in AV1 & HEVC image encoding (and not just decoding)
 # https://github.com/docker-library/wordpress/issues/996
 		libheif-plugin-aomenc \
@@ -106,6 +107,7 @@ RUN set -eux; \
     rm -rf /tmp/phpredis /tmp/redis.tar.gz
 
 # set recommended PHP.ini settings
+COPY 99-security.ini /usr/local/etc/php/conf.d/99-security.ini
 # see https://secure.php.net/manual/en/opcache.installation.php
 # enabled by default in the php images: https://github.com/docker-library/php/pull/1587
 RUN set -eux; \
@@ -197,6 +199,14 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -svfT docker-entrypoint.sh /usr/local/bin/docker-ensure-installed.sh
 
 ARG SOURCE_REVISION=unknown
+ARG WP_CLI_VERSION
+ARG WP_CLI_SHA256
+RUN curl -fSL --retry 3 --retry-all-errors \
+    "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" \
+    -o /usr/local/bin/wp \
+    && echo "$WP_CLI_SHA256 */usr/local/bin/wp" | sha256sum -c - \
+    && chmod 0755 /usr/local/bin/wp \
+    && test "$(wp --allow-root --version)" = "WP-CLI $WP_CLI_VERSION"
 ARG BROTLI_VERSION
 ARG BROTLI_PACKAGE_VERSION
 COPY --from=brotli-build /out/libbrotli1.deb /tmp/libbrotli1.deb
@@ -212,6 +222,7 @@ LABEL org.opencontainers.image.source="https://github.com/codenamey/tgi-wordpres
       io.tgi.wordpress.version="7.1.3" \
       io.tgi.redis.version="$REDIS_VERSION" \
       io.tgi.brotli.version="$BROTLI_VERSION" \
+      io.tgi.wp-cli.version="$WP_CLI_VERSION" \
       io.tgi.build.revision="$BUILD_REVISION" \
       io.tgi.upstream.revision="2d7faab7fb71508e6854cdbed948c195957f279e"
 

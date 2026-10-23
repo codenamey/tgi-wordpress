@@ -47,6 +47,10 @@ def config():
     cfg = read(CONFIG)
     if type(cfg['build_revision']) is not int or cfg['build_revision'] < 1:
         raise ValueError('build_revision must be a positive integer')
+    wp_cli = cfg['wp_cli']
+    if (not re.fullmatch(r'\d+\.\d+\.\d+', wp_cli['version'])
+            or not re.fullmatch(r'[0-9a-f]{64}', wp_cli['sha256'])):
+        raise ValueError('WP-CLI needs an exact stable version and SHA256')
     redis = cfg['extensions']['redis']
     if (not re.fullmatch(r'\d+\.\d+\.\d+', redis['version'])
             or not re.fullmatch(r'[0-9a-f]{40}', redis['commit'])
@@ -127,9 +131,11 @@ def resolve(persist=True):
     return lock
 
 
-def locked(branch):
-    entry = selected(branch)
-    lock = read(LOCK)
+def locked(branch, *, cfg=None, lock=None):
+    entry = selected(branch) if cfg is None else cfg['php'][branch]
+    if not entry['enabled']:
+        raise ValueError('PHP branch is disabled')
+    lock = read(LOCK) if lock is None else lock
     if lock['wordpress'] != WP or lock['wordpress_upstream'] != UPSTREAM:
         raise ValueError('WordPress lock does not match vendored runtime')
     data = lock['php'][branch]
@@ -168,6 +174,8 @@ def build_parameters(branch):
                       '--build-arg', 'REDIS_SHA256=' + redis['sha256']]
     for key, value in config()['brotli'].items():
         extension_args += ['--build-arg', 'BROTLI_' + key.upper() + '=' + value]
+    for key, value in config()['wp_cli'].items():
+        extension_args += ['--build-arg', 'WP_CLI_' + key.upper() + '=' + value]
     ART.mkdir(exist_ok=True)
     dockerfile = ART / 'Dockerfile.source'
     source_recipe = (ROOT / 'docker/php-source/Dockerfile').read_text() if selected(branch).get('build_from_source') else ''
@@ -225,13 +233,21 @@ def verify(branch, ref=None, expected_platform=None):
     if package_version != brotli['package_version']:
         raise ValueError('Brotli package version mismatch: ' + package_version)
     run('docker', 'run', '--rm', ref, 'tgi-verify-brotli', brotli['version'])
+    upload_progress = run('docker', 'run', '--rm', ref, 'php', '-r',
+                          'echo ini_get("session.upload_progress.enabled");', capture=True).strip()
+    if upload_progress not in ('', '0'):
+        raise ValueError('Session upload progress must be disabled')
+    wp_cli = run('docker', 'run', '--rm', '-u', 'www-data', ref, 'wp', '--version', capture=True).strip()
+    if wp_cli != 'WP-CLI ' + config()['wp_cli']['version']:
+        raise ValueError('WP-CLI version mismatch: ' + wp_cli)
     inspect = json.loads(run('docker', 'image', 'inspect', ref, capture=True))[0]
     if inspect['Os'] + '/' + inspect['Architecture'] not in data['platforms']:
         raise ValueError('Final image architecture is not configured')
     if expected_platform and inspect['Os'] + '/' + inspect['Architecture'] != expected_platform:
         raise ValueError('Final image architecture does not match ' + expected_platform)
     save(ART / f'verified-{branch}.json', {'image': ref, 'image_id': inspect['Id'], 'php': actual,
-        'wordpress': wp, 'redis': redis_version, 'brotli': brotli, 'modules': modules, 'base': data['base'], 'php_source': data,
+        'wordpress': wp, 'redis': redis_version, 'brotli': brotli, 'wp_cli': wp_cli,
+        'session_upload_progress': False, 'modules': modules, 'base': data['base'], 'php_source': data,
         'architecture': inspect['Architecture'], 'repo_digests': inspect.get('RepoDigests', [])})
     print(f'Verified {ref} PHP={actual} WordPress={wp}')
 
@@ -269,6 +285,12 @@ def release_context(branch):
     if not any(msg in check.stderr.lower() for msg in ['not found', 'manifest unknown']):
         raise ValueError('Could not confirm tag absence: ' + check.stderr)
     return destination, data, revision, exact
+
+
+def promote_tags(destination, branch, exact, ref):
+    tags = [exact, destination + ':' + branch, destination + ':' + branch + '-latest']
+    args = [arg for tag in tags for arg in ['-t', tag]]
+    run('docker', 'buildx', 'imagetools', 'create', *args, ref)
 
 
 def publish(branch, platform=None):
@@ -315,14 +337,14 @@ def publish(branch, platform=None):
             'source_revision': revision, 'platform': platform, 'reference': ref,
             'runtime_reference': runtime_refs[platform], 'inputs': data,
             'build_revision': config()['build_revision'], 'brotli': config()['brotli'],
-            'extensions': config()['extensions']})
+            'extensions': config()['extensions'], 'wp_cli': config()['wp_cli']})
         return
     # Candidate references are never production aliases. Promote only after all gates.
-    run('docker', 'buildx', 'imagetools', 'create', '-t', exact, '-t', destination + ':' + branch, ref)
+    promote_tags(destination, branch, exact, ref)
     save(ART / f'release-{branch}.json', {'image': exact, 'digest': digest, 'reference': ref,
         'php': data['version'], 'wordpress': WP, 'source_revision': revision, 'platforms': data['platforms'],
         'inputs': data, 'extensions': config()['extensions'], 'brotli': config()['brotli'], 'runtime_references': runtime_refs,
-        'security_reviews': read(ROOT / 'security/reviews.json'), 'provenance': True, 'sbom': True})
+        'wp_cli': config()['wp_cli'], 'security_reviews': read(ROOT / 'security/reviews.json'), 'provenance': True, 'sbom': True})
 
 
 def promote(branch):
@@ -334,7 +356,8 @@ def promote(branch):
         candidate = read(ART / f'candidate-{branch}-{arch}.json')
         if (candidate['source_revision'] != revision or candidate['platform'] != platform
                 or candidate['inputs'] != data or candidate['build_revision'] != config()['build_revision']
-                or candidate['brotli'] != config()['brotli'] or candidate['extensions'] != config()['extensions']):
+                or candidate['brotli'] != config()['brotli'] or candidate['extensions'] != config()['extensions']
+                or candidate['wp_cli'] != config()['wp_cli']):
             raise ValueError('Candidate does not match committed release inputs: ' + platform)
         for key in ['reference', 'runtime_reference']:
             if not re.fullmatch(re.escape(destination) + r'@sha256:[0-9a-f]{64}', candidate[key]):
@@ -370,11 +393,11 @@ def promote(branch):
     for platform, runtime_ref in runtime_refs.items():
         if destination + '@' + platform_digest(manifest, platform) != runtime_ref:
             raise ValueError('Combined index changed a validated runtime digest')
-    run('docker', 'buildx', 'imagetools', 'create', '-t', exact, '-t', destination + ':' + branch, ref)
+    promote_tags(destination, branch, exact, ref)
     save(ART / f'release-{branch}.json', {'image': exact, 'digest': digest, 'reference': ref,
         'php': data['version'], 'wordpress': WP, 'source_revision': revision, 'platforms': data['platforms'],
         'inputs': data, 'extensions': config()['extensions'], 'brotli': config()['brotli'],
-        'runtime_references': runtime_refs, 'security_reviews': read(ROOT / 'security/reviews.json'),
+        'runtime_references': runtime_refs, 'wp_cli': config()['wp_cli'], 'security_reviews': read(ROOT / 'security/reviews.json'),
         'provenance': True, 'sbom': True})
 
 

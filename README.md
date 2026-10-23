@@ -4,6 +4,11 @@ Public r3 images are available at `ghcr.io/codenamey/tgi-wordpress:8.4` and
 `:8.5` for AMD64 and ARM64. See the [verified release record](docs/release-2026-10-23-r3.md)
 for immutable tags/digests, test results and scoped security reviews.
 
+The r4 build adds pinned WP-CLI, MariaDB client tools, persistent session-upload
+hardening and per-branch `8.4-latest` / `8.5-latest` aliases. See
+[automatic patch releases](docs/automatic-updates.md) for the non-AI watcher,
+release gates and operating commands.
+
 Build patched PHP from official signed sources, then package WordPress with the
 unmodified official Apache entrypoint and configuration template. No dependency
 on the publication timing of official WordPress or PHP binary images.

@@ -1,5 +1,8 @@
 name: Approved GHCR release
 on:
+  push:
+    branches: [master]
+    paths: ['versions/lock.json', 'versions/versions.yaml']
   workflow_dispatch:
     inputs:
       registry_owner:
@@ -22,8 +25,41 @@ concurrency:
   group: ghcr-release
   cancel-in-progress: false
 jobs:
+  authorize:
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      ((github.event_name == 'workflow_dispatch' && inputs.approve_publish) ||
+       (github.event_name == 'push' && startsWith(github.event.head_commit.message, '[tgi-auto-php-patch] ')))
+    runs-on: ubuntu-24.04
+    outputs:
+      owner: ${{ steps.authorize.outputs.owner }}
+      visibility: ${{ steps.authorize.outputs.visibility }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: authorize
+        name: Enforce bounded automatic update or explicit manual authorization
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.before }}
+          INPUT_OWNER: ${{ inputs.registry_owner }}
+          INPUT_VISIBILITY: ${{ inputs.repository_visibility }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          visibility="$(gh api "repos/$GITHUB_REPOSITORY" --jq .visibility)"
+          if [ "$EVENT_NAME" = push ]; then
+            python3 scripts/prepare_update.py verify --base "$BASE_SHA"
+          else
+            test "$INPUT_OWNER" = "$owner"
+            test "$INPUT_VISIBILITY" = "$visibility"
+          fi
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
+          echo "visibility=$visibility" >> "$GITHUB_OUTPUT"
   validate:
-    if: inputs.approve_publish && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: authorize
     uses: ./.github/workflows/ci.yml
   matrix:
     needs: validate
@@ -43,7 +79,7 @@ jobs:
           print('native='+json.dumps({'include':[{'php':b,'runner':runners[p],'platform':p,'arch':p.split('/')[1]} for b,e in cfg['php'].items() if e['enabled'] for p in e['platforms']]}))
           PY
   candidate:
-    needs: [validate, matrix]
+    needs: [authorize, validate, matrix]
     environment: ghcr-release
     runs-on: ${{ matrix.runner }}
     permissions:
@@ -53,8 +89,8 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.native) }}
     env:
-      TGI_OWNER: ${{ inputs.registry_owner }}
-      EXPECTED_VISIBILITY: ${{ inputs.repository_visibility }}
+      TGI_OWNER: ${{ needs.authorize.outputs.owner }}
+      EXPECTED_VISIBILITY: ${{ needs.authorize.outputs.visibility }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -73,8 +109,8 @@ jobs:
           version: v0.76.1
       - name: Build and validate native candidate digest
         env:
-          TGI_REGISTRY_DESTINATION: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
-          TGI_PUBLISH_APPROVAL: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
+          TGI_REGISTRY_DESTINATION: ghcr.io/${{ needs.authorize.outputs.owner }}/tgi-wordpress
+          TGI_PUBLISH_APPROVAL: ghcr.io/${{ needs.authorize.outputs.owner }}/tgi-wordpress
           TGI_RELEASE_PLATFORM: ${{ matrix.platform }}
         run: python3 scripts/builder.py publish-platform '${{ matrix.php }}'
       - uses: actions/upload-artifact@v4
@@ -89,7 +125,7 @@ jobs:
             artifacts/trivy-*-${{ matrix.arch }}.json
             artifacts/sbom-*-${{ matrix.arch }}.json
   promote:
-    needs: [candidate, matrix]
+    needs: [authorize, candidate, matrix]
     environment: ghcr-release
     runs-on: ubuntu-24.04
     permissions:
@@ -113,8 +149,8 @@ jobs:
           merge-multiple: true
       - name: Recheck evidence and promote complete multi-platform release
         env:
-          TGI_REGISTRY_DESTINATION: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
-          TGI_PUBLISH_APPROVAL: ghcr.io/${{ inputs.registry_owner }}/tgi-wordpress
+          TGI_REGISTRY_DESTINATION: ghcr.io/${{ needs.authorize.outputs.owner }}/tgi-wordpress
+          TGI_PUBLISH_APPROVAL: ghcr.io/${{ needs.authorize.outputs.owner }}/tgi-wordpress
         run: python3 scripts/builder.py promote '${{ matrix.php }}'
       - uses: actions/upload-artifact@v4
         if: always()

@@ -37,7 +37,7 @@ class PromotionTests(unittest.TestCase):
             self.write(f'candidate-8.4-{arch}.json', {'source_revision': self.revision,
                 'platform': platform, 'reference': ref, 'runtime_reference': runtime, 'inputs': self.data,
                 'build_revision': b.config()['build_revision'], 'brotli': b.config()['brotli'],
-                'extensions': b.config()['extensions']})
+                'extensions': b.config()['extensions'], 'wp_cli': b.config()['wp_cli']})
             self.write(f'verified-8.4-{arch}.json', {'image': runtime, 'architecture': arch})
             self.write(f'integration-8.4-{arch}.json', {'image': runtime, 'passed': True})
             self.write(f'trivy-8.4-{arch}.json', {'ArtifactName': runtime,
@@ -76,7 +76,7 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(release['runtime_references'], self.runtime_refs)
         self.assertEqual(release['reference'], self.combined_ref)
         self.assertIn(('docker', 'buildx', 'imagetools', 'create', '-t', self.exact,
-            '-t', self.destination + ':8.4', self.combined_ref), self.calls)
+            '-t', self.destination + ':8.4', '-t', self.destination + ':8.4-latest', self.combined_ref), self.calls)
 
     def test_stale_or_incomplete_evidence_never_promotes(self):
         path = self.art / 'candidate-8.4-arm64.json'

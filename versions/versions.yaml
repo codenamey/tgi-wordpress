@@ -1,5 +1,9 @@
 {
-  "build_revision": 3,
+  "build_revision": 4,
+  "wp_cli": {
+    "version": "2.12.0",
+    "sha256": "ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c"
+  },
   "brotli": {
     "version": "1.1.1",
     "commit": "db0631dfea829194206d269bc7b25d0908cdb97d",
