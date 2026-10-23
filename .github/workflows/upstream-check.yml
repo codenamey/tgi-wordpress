@@ -11,24 +11,24 @@ concurrency:
 jobs:
   observe:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - name: Observe official PHP, WordPress and Debian
         run: |
           ./scripts/check-updates.sh
-          mkdir -p versions
-          cp artifacts/upstream-observation.json versions/upstream-observation.json
-      - name: Open or update one review PR
-        uses: peter-evans/create-pull-request@v7
+      - name: Retain observation report
+        uses: actions/upload-artifact@v4
         with:
-          branch: automation/upstream-observation
-          title: 'Review upstream PHP, WordPress and Debian changes'
-          commit-message: 'Record upstream version and digest changes for review'
-          add-paths: versions/upstream-observation.json
-          body: |
-            Review the observed source versions, PHP/Debian digests and upstream commits.
-            This observation does not update the accepted lock or deploy anything.
-            Run resolve.sh, review packaging changes, and require all CI checks before release.
+          name: upstream-observation
+          path: artifacts/upstream-observation.json
+      - name: Write upstream summary
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          report=json.load(open('artifacts/upstream-observation.json'))
+          print('## Upstream observation')
+          print('PHP source versions:', json.dumps(report['php_source_versions']))
+          print('\nWordPress latest:', report['wordpress_latest'])
+          print('\nSource/base lock changed:', report['php_changed'])
+          print('\nFull observations are retained as an artifact. The server watcher handles guarded PHP patch releases; other changes require review.')
+          PY

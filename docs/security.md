@@ -28,6 +28,14 @@ input. Avoid secrets in labels, release metadata or build arguments. Database
 credentials are runtime configuration. Integration databases use random passwords
 and private temporary Docker networks; HTTP binds only to localhost.
 
+The r4 runtime disables `session.upload_progress.enabled` in a build-installed
+INI file as PHP's recommended mitigation for the separate CVE-2026-115560.
+CLI and Apache HTTP integration checks require this setting to be disabled.
+This is distinct from the two PHP2Shell fixes supplied by the locked PHP source
+versions. WP-CLI is installed from a pinned official release with SHA256
+verification and checked as www-data; its presence does not automatically update
+WordPress core, plugins or themes.
+
 ## Reviewed findings, 22 October 2026
 
 ### Brotli fix, 23 October 2026

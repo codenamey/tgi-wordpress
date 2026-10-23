@@ -23,3 +23,10 @@ Security scans keep an unfiltered raw report and pass it through security_gate.p
 with security/reviews.json. Reviewed findings remain in the evidence; new
 critical findings, fixed-version availability, scope changes and expiry fail
 closed. Redis source and exact extension version are verified during build.
+
+`prepare_update.py prepare --check` checks official PHP releases without changing
+files. `prepare_update.py prepare` prepares only permitted PHP patch lock changes
+and increments the build revision; `verify --base <commit>` validates a committed
+transition before automatic publication. `watch_updates.py` runs on the dedicated
+update host through systemd, with no Docker or AI dependency. See
+docs/automatic-updates.md for authorization, aliases, installation and operations.

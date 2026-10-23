@@ -6,6 +6,8 @@ recipe, signing keys, extensions and both target architectures. The resolver
 never silently downgrades a missing release. Review and commit `versions/lock.json`.
 
 Exact tags: `php<actual-patch>-wp<actual-core>-r<build_revision>`.
+Moving aliases `8.4` / `8.4-latest` and `8.5` / `8.5-latest` stay within their
+respective PHP branches and point to the same tested multi-platform release.
 Increase build_revision for packaging or Debian changes at the same component
 versions. Never overwrite a released exact tag. Branch aliases may move only
 after that build is tested, scanned and approved. There is no automatic stable
@@ -22,7 +24,10 @@ SBOM and provenance. Production references should use the recorded digest.
 
 The manual release workflow requires the confirmed registry owner, repository
 visibility and explicit publishing authorization. Configure required reviewers
-on the `ghcr-release` environment before enabling it. It first runs native CI
+on the `ghcr-release` environment when operator approval is desired; reviewers
+also intentionally pause automatic releases. The authorized server watcher may
+trigger automatic releases for narrowly validated PHP patch commits only; see
+[automatic updates](automatic-updates.md). Both paths first run native CI
 for every configured branch/platform, then builds and pushes attested candidates
 on native AMD64 and ARM64 runners. Each candidate is verified, integration-tested
 and scanned by its runtime digest on the corresponding native runner. A final
@@ -41,5 +46,6 @@ change package visibility. Confirm GHCR package access/visibility separately.
 
 Exact-tag immutability is enforced by a preflight existence check and serialized
 workflow runs, not a native GHCR immutability setting. Restrict all other writers
-to avoid a race. GitHub Actions have been prepared locally; actual runner and
-registry behavior must be validated after setup.
+to avoid a race. Actual native runner and registry behavior was verified in the
+[published r3 release](release-2026-10-23-r3.md); newer releases retain their own
+workflow evidence and machine-readable manifests.
