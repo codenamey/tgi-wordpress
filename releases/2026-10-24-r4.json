@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "workflow": "https://github.com/codenamey/tgi-wordpress/actions/runs/40028390525",
+  "releases": {
+    "8.4": {
+      "brotli": {
+        "commit": "db0631dfea829194206d269bc7b25d0908cdb97d",
+        "package_version": "1.1.1-0+tgi1",
+        "sha256": "38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a",
+        "version": "1.1.1"
+      },
+      "digest": "sha256:80443519c15f6fdba3c90b49b31c1214af00d5d0f081f38014ed5a95900cea6f",
+      "extensions": {
+        "redis": {
+          "commit": "df4fab2de7fc327c54c94a13af2b9542e4fbd720",
+          "sha256": "79ecabd899e50a6efa56d9fc28a987a25d78deecc32fdd0fa9840b1b3d83740e",
+          "version": "6.3.0"
+        }
+      },
+      "image": "ghcr.io/codenamey/tgi-wordpress:php8.4.27-wp7.1.3-r4",
+      "inputs": {
+        "base": "debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad",
+        "gpg_keys": "AFD8691FDAEDF03BDF6E460563F15A9B715376CA 9D7F99A0CB8F05C8A6958D6256A97AF7600A39A6 0616E93D95AF471243E26761770426E17EBBB3DD",
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "source_commit": "e3eaff845f7a9f7259c31da54dce0320b47a3bbd",
+        "source_sha256": "dcf93923b0e38e0d5252b25b796520b5a47761a08b3488b6d0b5d1115764d3f0",
+        "version": "8.4.27"
+      },
+      "php": "8.4.27",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "provenance": true,
+      "reference": "ghcr.io/codenamey/tgi-wordpress@sha256:80443519c15f6fdba3c90b49b31c1214af00d5d0f081f38014ed5a95900cea6f",
+      "runtime_references": {
+        "linux/amd64": "ghcr.io/codenamey/tgi-wordpress@sha256:885319039d98ef988eec6afb1484cf550c58a63d31937ea46ecb41c79227805d",
+        "linux/arm64": "ghcr.io/codenamey/tgi-wordpress@sha256:fd885a4dc341ea4f8fac4051f54a5adccb03d89acd49f0d3819b4fc1bdca8eea"
+      },
+      "sbom": true,
+      "security_reviews": {
+        "reviews": [
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-111497",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "libbrotli1",
+            "reason": "Only the TGI package compiled from upstream Brotli v1.1.1 commit db0631dfea829194206d269bc7b25d0908cdb97d, archive SHA256 38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a. Debian identifies upstream v1.1.1 and fix commit da9806362874b9bd4b552a3af360b5d6347beb12 as remediating CVE-2026-111497 but its tracker has no fixed Debian package, so Trivy may flag the replacement package. Build requires upstream CTest and runtime verification dynamically checks decoder/encoder version 1.1.1 and compression roundtrip on each architecture. This review never covers Debian libbrotli1 1.1.0-2+b7, an unpatched source build, or a different package version.",
+            "references": [
+              "https://security-tracker.debian.org/tracker/CVE-2026-111497",
+              "https://github.com/google/brotli/releases/tag/v1.1.1",
+              "https://github.com/google/brotli/commit/da9806362874b9bd4b552a3af360b5d6347beb12"
+            ],
+            "reviewed_at": "2026-10-23",
+            "reviewed_by": "Codex automated upstream patch verification",
+            "status": "not_affected",
+            "versions": [
+              "1.1.1-0+tgi1"
+            ]
+          },
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-6653",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "libxml2",
+            "reason": "Affected XML parsing library; NOT claimed fixed or not affected. Debian explicitly classifies the trixie issue as no-dsa / Minor issue and has no fixed stable package. Temporarily defer this exact vendor-minor denial-of-service finding while shipping the independently verified critical PHP RCE fixes. No site-specific exploitability assumption is made. A newly available fix, changed package version, changed distribution or expiry blocks release again.",
+            "references": [
+              "https://security-tracker.debian.org/tracker/CVE-2026-6653",
+              "https://gitlab.gnome.org/GNOME/libxml2/-/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df"
+            ],
+            "reviewed_at": "2026-10-22",
+            "reviewed_by": "Codex automated release security review",
+            "status": "vendor_minor_deferred",
+            "versions": [
+              "2.12.7+dfsg+really2.9.14-2.1+deb13u3"
+            ]
+          },
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-93221",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "linux-libc-dev",
+            "reason": "The advisory concerns executable Linux kernel fs/nfsd implementation. linux-libc-dev supplies userspace development headers, not a running kernel/NFS server. This review applies only to this header package in the WordPress image, never to a host kernel, linux-image package, NFS server or any other package. Host kernel patch status remains outside this image review.",
+            "references": [
+              "https://kernel-team.pages.debian.net/kernel-sec/CVE-2026-93221.html",
+              "https://packages.debian.org/trixie/linux-libc-dev"
+            ],
+            "reviewed_at": "2026-10-22",
+            "reviewed_by": "Codex automated release security review",
+            "status": "not_affected",
+            "versions": [
+              "6.12.113-1"
+            ]
+          }
+        ],
+        "schema": 1
+      },
+      "source_revision": "ef985647d41454f78ae06cb534814e8723363d69",
+      "wordpress": "7.1.3",
+      "wp_cli": {
+        "sha256": "ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c",
+        "version": "2.12.0"
+      }
+    },
+    "8.5": {
+      "brotli": {
+        "commit": "db0631dfea829194206d269bc7b25d0908cdb97d",
+        "package_version": "1.1.1-0+tgi1",
+        "sha256": "38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a",
+        "version": "1.1.1"
+      },
+      "digest": "sha256:b053bd3f753ef0582914f80435aa7812dc1bad11d32d3d3aeca46234196d7d01",
+      "extensions": {
+        "redis": {
+          "commit": "df4fab2de7fc327c54c94a13af2b9542e4fbd720",
+          "sha256": "79ecabd899e50a6efa56d9fc28a987a25d78deecc32fdd0fa9840b1b3d83740e",
+          "version": "6.3.0"
+        }
+      },
+      "image": "ghcr.io/codenamey/tgi-wordpress:php8.5.12-wp7.1.3-r4",
+      "inputs": {
+        "base": "debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad",
+        "gpg_keys": "1198C0117593497A5EC5C199286AF1F9897469DC 49D9AF6BC72A80D6691719C8AA23F5BE9C7097D4 D95C03BC702BE9515344AE3374E44BC9067701A5",
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "source_commit": "e3eaff845f7a9f7259c31da54dce0320b47a3bbd",
+        "source_sha256": "08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209",
+        "version": "8.5.12"
+      },
+      "php": "8.5.12",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "provenance": true,
+      "reference": "ghcr.io/codenamey/tgi-wordpress@sha256:b053bd3f753ef0582914f80435aa7812dc1bad11d32d3d3aeca46234196d7d01",
+      "runtime_references": {
+        "linux/amd64": "ghcr.io/codenamey/tgi-wordpress@sha256:d645540625f3574feb2aaadb0f87678beff3d17d7e1cd494c1995d5378850134",
+        "linux/arm64": "ghcr.io/codenamey/tgi-wordpress@sha256:2a78bbfc094d6425573c7ede5637ff02858486eddbd050fe81e71e9a7db92b74"
+      },
+      "sbom": true,
+      "security_reviews": {
+        "reviews": [
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-111497",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "libbrotli1",
+            "reason": "Only the TGI package compiled from upstream Brotli v1.1.1 commit db0631dfea829194206d269bc7b25d0908cdb97d, archive SHA256 38f9c17ee36c2e930ce00975b50fcd246a8e5594c1bcf43cd56b14118786b82a. Debian identifies upstream v1.1.1 and fix commit da9806362874b9bd4b552a3af360b5d6347beb12 as remediating CVE-2026-111497 but its tracker has no fixed Debian package, so Trivy may flag the replacement package. Build requires upstream CTest and runtime verification dynamically checks decoder/encoder version 1.1.1 and compression roundtrip on each architecture. This review never covers Debian libbrotli1 1.1.0-2+b7, an unpatched source build, or a different package version.",
+            "references": [
+              "https://security-tracker.debian.org/tracker/CVE-2026-111497",
+              "https://github.com/google/brotli/releases/tag/v1.1.1",
+              "https://github.com/google/brotli/commit/da9806362874b9bd4b552a3af360b5d6347beb12"
+            ],
+            "reviewed_at": "2026-10-23",
+            "reviewed_by": "Codex automated upstream patch verification",
+            "status": "not_affected",
+            "versions": [
+              "1.1.1-0+tgi1"
+            ]
+          },
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-6653",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "libxml2",
+            "reason": "Affected XML parsing library; NOT claimed fixed or not affected. Debian explicitly classifies the trixie issue as no-dsa / Minor issue and has no fixed stable package. Temporarily defer this exact vendor-minor denial-of-service finding while shipping the independently verified critical PHP RCE fixes. No site-specific exploitability assumption is made. A newly available fix, changed package version, changed distribution or expiry blocks release again.",
+            "references": [
+              "https://security-tracker.debian.org/tracker/CVE-2026-6653",
+              "https://gitlab.gnome.org/GNOME/libxml2/-/commit/463bbeeca1805b5c4828f50d0fefc4eebaf620df"
+            ],
+            "reviewed_at": "2026-10-22",
+            "reviewed_by": "Codex automated release security review",
+            "status": "vendor_minor_deferred",
+            "versions": [
+              "2.12.7+dfsg+really2.9.14-2.1+deb13u3"
+            ]
+          },
+          {
+            "expires_at": "2026-10-29",
+            "id": "CVE-2026-93221",
+            "os_family": "debian",
+            "os_major": "13",
+            "package": "linux-libc-dev",
+            "reason": "The advisory concerns executable Linux kernel fs/nfsd implementation. linux-libc-dev supplies userspace development headers, not a running kernel/NFS server. This review applies only to this header package in the WordPress image, never to a host kernel, linux-image package, NFS server or any other package. Host kernel patch status remains outside this image review.",
+            "references": [
+              "https://kernel-team.pages.debian.net/kernel-sec/CVE-2026-93221.html",
+              "https://packages.debian.org/trixie/linux-libc-dev"
+            ],
+            "reviewed_at": "2026-10-22",
+            "reviewed_by": "Codex automated release security review",
+            "status": "not_affected",
+            "versions": [
+              "6.12.113-1"
+            ]
+          }
+        ],
+        "schema": 1
+      },
+      "source_revision": "ef985647d41454f78ae06cb534814e8723363d69",
+      "wordpress": "7.1.3",
+      "wp_cli": {
+        "sha256": "ce34ddd838f7351d6759068d09793f26755463b4a4610a5a5c0a97b68220d85c",
+        "version": "2.12.0"
+      }
+    }
+  },
+  "public_verification": {
+    "verified_at_utc": "2026-10-23T21:59:41.001435+00:00",
+    "anonymous": true,
+    "releases": {
+      "8.4": {
+        "digest": "sha256:80443519c15f6fdba3c90b49b31c1214af00d5d0f081f38014ed5a95900cea6f",
+        "tags_verified": [
+          "8.4",
+          "8.4-latest",
+          "php8.4.27-wp7.1.3-r4"
+        ],
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "anonymous_pull_platform": "linux/arm64",
+        "runtime_versions": "8.4.27|7.1.3|6.3.0|off",
+        "wp_cli": "WP-CLI 2.12.0"
+      },
+      "8.5": {
+        "digest": "sha256:b053bd3f753ef0582914f80435aa7812dc1bad11d32d3d3aeca46234196d7d01",
+        "tags_verified": [
+          "8.5",
+          "8.5-latest",
+          "php8.5.12-wp7.1.3-r4"
+        ],
+        "platforms": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "anonymous_pull_platform": "linux/arm64",
+        "runtime_versions": "8.5.12|7.1.3|6.3.0|off",
+        "wp_cli": "WP-CLI 2.12.0"
+      }
+    }
+  },
+  "watcher": {
+    "host": "192.168.31.201",
+    "hostname": "tgi-ab-1",
+    "timer": "tgi-wordpress-updater.timer",
+    "interval_minutes": 15,
+    "user": "tgi-wp-updater",
+    "deploy_key_id": 167476307,
+    "watcher_sha256": "16567c350bb686f180c22b998817ba62484bf7933f89ba7a221d3041c9deb3eb",
+    "commissioning": "read-only and real systemd runs succeeded; no newer PHP patch available",
+    "ai": false,
+    "email": false,
+    "production_deploy": false
+  }
+}

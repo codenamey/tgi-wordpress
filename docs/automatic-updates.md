@@ -4,7 +4,7 @@ The watcher on `tgi-ab-1` (`192.168.31.201`) checks every 15 minutes. It uses
 Python, Git, SSH and systemd, with no AI service, email or Docker access.
 GitHub Actions builds and runs both AMD64 and ARM64 images natively.
 
-Public moving aliases, after a successful r4-or-later release:
+Published public moving aliases:
 
 ```bash
 docker pull ghcr.io/codenamey/tgi-wordpress:8.4-latest
