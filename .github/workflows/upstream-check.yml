@@ -12,7 +12,7 @@ jobs:
   observe:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Observe official PHP, WordPress and Debian
         run: |
           ./scripts/check-updates.sh
